@@ -69,5 +69,5 @@ socks5://host:port
 ```
 - Запустите бота: / Run: 
 ```bash
-Python bot.py
+Python main.py
 ```
