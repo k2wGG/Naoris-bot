@@ -1,73 +1,131 @@
-# Naoris Protocol Automation Bot / Автоматизация бота Naoris Protocol RU\ENG
+# Naoris-bot
 
-Этот бот предназначен для автоматизации процесса heartbeat в протоколе Naoris. Бот будет периодически отправлять heartbeat для каждого зарегистрированного аккаунта, с поддержкой прокси для повышения приватности и безопасности.
+**Naoris-bot** — это бот для автоматического фарминга на платформе Naoris Protocol. Бот периодически отправляет heartbeat, toggle и ping-запросы, эмулируя активность устройства. Кроме того, он получает информацию о кошельке (например, заработок, ранги, поинты) и выводит её в консоли. В проекте реализовано интерактивное меню для удобного запуска и управления ботом.
 
-This bot is designed to automate the heartbeat process on the Naoris Protocol. The bot will periodically send heartbeats for each registered account, with proxy support to enhance privacy and security.
+## Функционал
 
----
+- **Heartbeat, Toggle и Ping:** Регулярная отправка запросов для имитации работы устройства.
+- **Получение информации о кошельке:** Отображение общего заработка, заработка за сегодня, реферального заработка, времени работы и поинтов.
+- **Интерактивное меню:** Удобное меню для выбора запуска бота или выхода из программы.
+- **Поддержка прокси:** Возможность работы через прокси (настройка в файле `proxy.txt`).
 
-## **Функции / Features**
+## Требования
 
-- **Автоматическая отправка heartbeat.**  
-  *Automatic sending of heartbeat.*
+- Python 3.7+
+- Git
 
-- **Поддержка использования прокси (HTTP, SOCKS4, SOCKS5).**  
-  *Supports proxy usage (HTTP, SOCKS4, SOCKS5).*
+## Установка и запуск
 
-- **Отображение статуса аккаунта и логов активности.**  
-  *Displays account status and activity logs.*
+### Общие шаги
 
-- **Поддержка нескольких кошельков с разными цветами для каждого.**  
-  *Multi-wallet support with different colors for each wallet.*
+1. **Клонирование репозитория:**
 
----
-
-## **Требования / Requirements**
-
-- **Python 3.7 или выше.**  
-  *Python 3.7 or higher.*
-
-- **Необходимые модули Python (см. ниже).**  
-  *Required Python modules (see below).*
-
-- **Прокси (если есть).**  
-  *Proxy (if available).*
-
----
-
-## **Установка / Installation**
-
-1. **Клонирование репозитория и установка модулей / Clone Repository & Install Modules:**
-
+   Откройте терминал или командную строку и выполните:
    ```bash
    git clone https://github.com/k2wGG/Naoris-bot.git
    cd Naoris-bot
    ```
+
+2. **Настройка файлов конфигурации:**
+   - **accounts.json:** В этом файле укажите данные аккаунтов (EVM-адрес, deviceHash и опционально token).  
+     Пример:
+     ```json
+     [
+         {
+             "Address": "0xYourAddress1",
+             "deviceHash": "YourDeviceHash1",
+             "token": "YourJWTtoken1"
+         },
+         {
+             "Address": "0xYourAddress2",
+             "deviceHash": "YourDeviceHash2",
+             "token": "YourJWTtoken2"
+         }
+     ]
+     ```
+   - **proxy.txt:** Если планируете использовать прокси, добавьте их в этот файл (по одному на строку):
+     ```
+     http://proxy1:port
+     http://proxy2:port
+     ```
+
+### Для Windows
+
+1. **Создание виртуального окружения:**
+
+   В командной строке выполните:
    ```bash
-   pip install requests requests[socks] colorama pyjwt
+   python -m venv venv
    ```
----
 
-2. **Запуск / How to Run**
-- Получите токен, нажав F12 в расширении Naoris Protocol Node (пример токена начинается с "ey").
+2. **Активация виртуального окружения:**
 
-- Retrieve the token by inspecting it using the Naoris Protocol Node extension (example token starting with "ey").
-![1](https://github.com/user-attachments/assets/4b9b53b1-7bdb-4073-9657-5476e24b380b)
+   - В CMD:
+     ```bash
+     venv\Scripts\activate
+     ```
+   - В PowerShell:
+     ```bash
+     .\venv\Scripts\Activate.ps1
+     ```
 
-- После получения токена вставьте его в файл data.txt.
-- After obtaining the token, insert it into data.txt.
+3. **Установка зависимостей:**
 
-- Если есть прокси, добавьте их в файл proxy.txt в следующем формате (необязательно):
-- If you have proxies, add them to proxy.txt in the following format (OPTIONAL):
-```bash
-http://username:password@host:port
-http://host:port
-socks4://username:password@host:port
-socks4://host:port
-socks5://username:password@host:port
-socks5://host:port
-```
-- Запустите бота: / Run: 
-```bash
-Python main.py
-```
+   Если имеется файл `requirements.txt`, выполните:
+   ```bash
+   pip install -r requirements.txt
+   ```
+   Если файла нет, установите пакеты вручную:
+   ```bash
+   pip install pyjwt cloudscraper colorama
+   ```
+
+4. **Запуск проекта:**
+
+   В виртуальном окружении выполните:
+   ```bash
+   python main.py
+   ```
+   После запуска появится интерактивное меню, следуйте инструкциям на экране.
+
+### Для Linux
+
+1. **Создание виртуального окружения:**
+
+   В терминале выполните:
+   ```bash
+   python3 -m venv venv
+   ```
+
+2. **Активация виртуального окружения:**
+
+   ```bash
+   source venv/bin/activate
+   ```
+
+3. **Установка зависимостей:**
+
+   Если имеется файл `requirements.txt`:
+   ```bash
+   pip install -r requirements.txt
+   ```
+   Если файла нет, установите пакеты вручную:
+   ```bash
+   pip install pyjwt cloudscraper colorama
+   ```
+
+4. **Запуск проекта:**
+
+   В активированном виртуальном окружении выполните:
+   ```bash
+   python main.py
+   ```
+   После запуска появится интерактивное меню, следуйте инструкциям на экране.
+
+## Использование
+
+При запуске проекта откроется интерактивное меню с вариантами:
+- **Запустить бота:** Бот начинает работу, отправляя heartbeat, toggle и ping-запросы, а также выводит информацию о кошельке (включая поинты) в консоль.
+- **Выход:** Завершение работы приложения.
+
+Сессионные данные сохраняются в папке `sessions`, что позволяет повторно использовать их при следующих запусках.
