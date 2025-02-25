@@ -1,4 +1,4 @@
-import threading  # Для работы с потоками
+import threading
 import uuid
 import time
 import json
@@ -13,7 +13,9 @@ from colorama import init, Fore
 # Инициализация colorama для цветного вывода
 init(autoreset=True)
 
-SESSION_FILE = "wallet_session.json"
+# Для хранения сессионных данных создаём отдельную папку
+SESSIONS_DIR = "sessions"
+os.makedirs(SESSIONS_DIR, exist_ok=True)
 
 def display_banner():
     print(Fore.GREEN + "[+]===============================[+]")
@@ -107,8 +109,8 @@ API_CONFIG = {
 }
 
 APP_CONFIG = {
-    "heartbeat_interval": 1500,  # базовый интервал (4.5 секунд)
-    "data_file": "accounts.json",   # Файл с аккаунтами (формат: [{ "Address": ..., "deviceHash": ..., "token": "..." }, ...])
+    "heartbeat_interval": 60,  # Интервал в секундах (60 секунд = 1 минута)
+    "data_file": "accounts.json",   # Файл с аккаунтами
     "proxy_file": "proxy.txt",
     "session_refresh_interval": 5,
 }
@@ -122,6 +124,8 @@ class DeviceHeartbeatBot:
         self.toggle_state = True  # по умолчанию ON
         self.whitelisted_urls = ["naorisprotocol.network", "google.com"]
         self.is_installed = True
+        # Создаём файл с сессией, уникальный для данного аккаунта
+        self.session_file = os.path.join(SESSIONS_DIR, f"wallet_session_{self.account['wallet_address']}.json")
         self.scraper = self.create_scraper(self.proxy)
         self.load_wallet_session()
         try:
@@ -134,20 +138,20 @@ class DeviceHeartbeatBot:
         """Сохраняет cookies (сессионные данные) в файл."""
         try:
             cookies = self.scraper.cookies.get_dict()
-            with open(SESSION_FILE, "w", encoding="utf-8") as f:
+            with open(self.session_file, "w", encoding="utf-8") as f:
                 json.dump(cookies, f)
-            print(Fore.CYAN + f"[INFO] Сессионные данные сохранены в {SESSION_FILE}")
+            print(Fore.CYAN + f"[INFO] Сессионные данные сохранены в {self.session_file}")
         except Exception as e:
             print(Fore.YELLOW + f"[WARNING] Не удалось сохранить сессионные данные: {e}")
 
     def load_wallet_session(self):
         """Загружает cookies (сессионные данные) из файла, если он существует."""
-        if os.path.exists(SESSION_FILE):
+        if os.path.exists(self.session_file):
             try:
-                with open(SESSION_FILE, "r", encoding="utf-8") as f:
+                with open(self.session_file, "r", encoding="utf-8") as f:
                     cookies = json.load(f)
                 self.scraper.cookies.update(cookies)
-                print(Fore.CYAN + f"[INFO] Сессионные данные загружены из {SESSION_FILE}")
+                print(Fore.CYAN + f"[INFO] Сессионные данные загружены из {self.session_file}")
             except Exception as e:
                 print(Fore.YELLOW + f"[WARNING] Не удалось загрузить сессионные данные: {e}")
 
@@ -230,7 +234,7 @@ class DeviceHeartbeatBot:
                 timeout=30
             )
             self.toggle_state = (state.upper() == "ON")
-            print(Fore.GREEN + f"[✔] Toggle {state} выполнен. Ответ: {response}")
+            print(Fore.GREEN + f"[✔] Toggle {state} выполнен. Ответ: {response.text}")
             self.save_wallet_session()
         except Exception as e:
             print(Fore.RED + f"[✖] Toggle Error: {e}")
@@ -243,7 +247,7 @@ class DeviceHeartbeatBot:
                 "topic": "device-heartbeat",
                 "inputData": {
                     "walletAddress": self.account["wallet_address"],
-                    "deviceHash": str(self.account.get("deviceHash") or generate_device_hash()),
+                    "deviceHash": str(self.deviceHash),
                     "isInstalled": self.is_installed,
                     "toggleState": self.toggle_state,
                     "whitelistedUrls": self.whitelisted_urls,
@@ -260,7 +264,7 @@ class DeviceHeartbeatBot:
             if response.status_code == 401:
                 print(Fore.YELLOW + "[WARNING] Heartbeat вернул 401. Восстанавливаем сессию через toggle.")
                 self.toggle_device("ON")
-            print(Fore.GREEN + f"[✔] Heartbeat отправлен. Ответ: {response}")
+            print(Fore.GREEN + f"[✔] Heartbeat отправлен. Ответ: {response.text}")
         except Exception as e:
             print(Fore.RED + f"[✖] Heartbeat Error: {e}")
 
@@ -275,7 +279,7 @@ class DeviceHeartbeatBot:
                 "topic": "ping",
                 "inputData": {
                     "walletAddress": self.account["wallet_address"],
-                    "deviceHash": str(self.account.get("deviceHash") or generate_device_hash()),
+                    "deviceHash": str(self.deviceHash),
                     "timestamp": int(time.time()),
                     "clientVersion": "4.30.0"
                 }
@@ -286,14 +290,14 @@ class DeviceHeartbeatBot:
                 headers=self.get_request_headers(),
                 timeout=30
             )
-            print(Fore.GREEN + f"[✔] Ping отправлен. Ответ: {response}")
+            print(Fore.GREEN + f"[✔] Ping отправлен. Ответ: {response.text}")
         except Exception as e:
             print(Fore.RED + f"[✖] Ping Error: {e}")
 
     def ping_loop(self):
         """Петля, отправляющая пинг каждые 5-10 секунд."""
         while True:
-            time.sleep(random.uniform(1, 5))
+            time.sleep(random.uniform(5, 10))
             self.send_ping()
 
     def get_wallet_details(self):
@@ -340,7 +344,7 @@ class DeviceHeartbeatBot:
             self.toggle_device("ON")
             self.send_heartbeat()
             while True:
-                time.sleep(30)
+                time.sleep(APP_CONFIG["heartbeat_interval"])
                 self.uptime_minutes += 1
                 if not self.toggle_state:
                     self.toggle_device("ON")
