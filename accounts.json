@@ -1,15 +1,12 @@
 [
-
   {
-    "Address": "",
-    "deviceHash": "",
-    "token":
-  }
-
+    "Address": "0xYourAddress1",
+    "deviceHash": "YourDeviceHash1",
+    "token": "YourToken1"
+  },
   {
-    "Address": "",
-    "deviceHash": "",
-    "token":
+    "Address": "0xYourAddress2",
+    "deviceHash": "YourDeviceHash2",
+    "token": "YourToken2"
   }
-  
 ]
